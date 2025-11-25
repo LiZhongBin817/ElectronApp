@@ -1,6 +1,6 @@
 {
   "name": "Electron_App",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "productName": "Electron_App",
   "description": "Electron_App",
@@ -9,7 +9,8 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "publish": "electron-forge publish"
+    "publish": "electron-forge publish",
+    "build": "node ./webpack/publish.js"
   },
   "author": "lizb",
   "license": "MIT",
@@ -27,6 +28,7 @@
   },
   "dependencies": {
     "@electron-forge/maker-wix": "^7.10.2",
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "update-electron-app": "^3.1.1"
   }
 }
