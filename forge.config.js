@@ -61,7 +61,10 @@ module.exports = {
           owner: 'LiZhongBin817',
           name: 'ElectronApp'
         },
+        // 这个发布版本不是预发布版本
         prerelease: false,
+        // true：发布版本将作为草稿发布，不会立即公开显示
+        // false：发布版本将作为正式版本发布，会立即公开显示
         draft: true
       }
     }

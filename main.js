@@ -1,6 +1,14 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('node:path')
+const { updateElectronApp } = require('update-electron-app')
 
+// 配置更新器
+updateElectronApp({
+    updateSource: {
+        type: "ElectronPublicUpdateService",
+        repo: 'LiZhongBin817/ElectronApp'
+    }
+});
 const createWindow = () => {
     const win = new BrowserWindow({
         width: 800,
