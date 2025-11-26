@@ -1,14 +1,8 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
-const { updateElectronApp } = require('update-electron-app')
+const { setupAutoUpdater, devHotReload } = require('./webpack/autoUpdater')
 
-// 配置更新器
-updateElectronApp({
-    updateSource: {
-        type: "ElectronPublicUpdateService",
-        repo: 'LiZhongBin817/ElectronApp'
-    }
-});
+/** 创建窗口 */
 const createWindow = () => {
     const win = new BrowserWindow({
         width: 800,
@@ -18,16 +12,31 @@ const createWindow = () => {
         }
     })
 
-    win.loadFile('index.html')
+    const indexPath = path.join(process.cwd(), 'public/index.html');
+    win.loadFile(indexPath);
 }
 
-app.whenReady().then(() => {
-    createWindow()
+app.whenReady().then(async () => {
+    await createWindow()
+    // 开发阶段：保存即重启/刷新
+    devHotReload({
+        watchFolder: path.join(__dirname, 'src'), // 静态资源
+        mainFolder: __dirname                         // 主进程代码
+    });
+
+    // 启动APP自动更新 
+    // 首次检查建议延迟 3-5 秒，避免刚启动就弹通知
+    setTimeout(() => setupAutoUpdater({ type: 'github', owner: 'LiZhongBin817', repo: 'ElectronApp', provider: 'lizb' }), 4000);
 
     // 如果没有窗口打开则打开一个窗口 (macOS)
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+
+    ipcMain.handle('open-devtools', () => {
+        const [win] = BrowserWindow.getAllWindows();
+        if (win) win.webContents.openDevTools({ mode: 'right' });
+    });
 })
 
 // 关闭所有窗口时退出应用 (Windows & Linux) 

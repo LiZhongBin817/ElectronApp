@@ -53,6 +53,7 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  // 发布配置
   publishers: [
     {
       name: '@electron-forge/publisher-github',
