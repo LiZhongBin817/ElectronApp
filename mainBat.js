@@ -39,7 +39,3 @@ app.whenReady().then(async () => {
     });
 })
 
-// 关闭所有窗口时退出应用 (Windows & Linux) 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
-})

@@ -44,15 +44,6 @@ function setupAutoUpdater(opts = {}) {
         autoUpdater.checkForUpdatesAndNotify();
     }
 
-    updateElectronApp({
-        updateSource: {
-            type: "ElectronPublicUpdateService",
-            repo: 'LiZhongBin817/ElectronApp'
-        },
-        // 可选配置
-        provider: 'lizb', // 指定更新提供者
-    });
-
     // 监听更新事件（可选）
     autoUpdater.on('checking-for-update', () => {
         console.log('正在检查更新...');
@@ -106,6 +97,9 @@ function devHotReload(opts = {}) {
         app.relaunch();
         app.exit(0);
     });
+
+    console.log(watchFolder,'watchFolder');
+    
 
     // 2. 渲染进程整页刷新
     chokidar.watch(watchFolder, { usePolling: true, ignored: ['**/node_modules/**', '**/out/**', '**/.git/**'] })

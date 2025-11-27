@@ -38,8 +38,27 @@ module.exports = {
   ],
   plugins: [
     {
-      name: '@electron-forge/plugin-auto-unpack-natives',
-      config: {},
+      name: '@electron-forge/plugin-webpack',
+      config: {
+        mainConfig: './webpack/main.config.js',
+        devContentSecurityPolicy:
+          "connect-src 'self' http://127.0.0.1:* http://localhost:* wss://127.0.0.1:7693 http://api.jfbym.com 'unsafe-eval'",
+        renderer: {
+          config: './webpack/renderer.config.js',
+          entryPoints: [
+            {
+              html: './src/renderer/index.html',
+              js: './src/renderer/index.tsx',
+              name: 'main_window',
+            },
+            // {
+            //   html: './src/Popup/Entry/index.html',
+            //   js: './src/Popup/Entry/index.tsx',
+            //   name: 'popup_window',
+            // },
+          ],
+        },
+      },
     },
     // Fuses are used to enable/disable various Electron functionality
     // at package time, before code signing the application

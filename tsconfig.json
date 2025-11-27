@@ -1,0 +1,30 @@
+{
+    "compilerOptions":{
+        "target": "ESNext",
+        "module": "ESNext",
+        "lib": ["DOM", "ES2020", "ESNext"],
+        /* 增量编译 */
+        "incremental": true,
+        /* 严格模式 */
+        "strict": true,
+        /* json模块 */
+        "resolveJsonModule": true,
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js",
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "outDir": "dist",
+        "noImplicitReturns": false,
+        "moduleResolution": "node",
+        "paths": {
+            "@/*": ["./src/*"],
+            "*": ["node_modules/*"]
+        }
+    },
+    "exclude": ["node_modules", "out", "lambda", "webpack", "electron-asar-hot-updater"]
+
+}
