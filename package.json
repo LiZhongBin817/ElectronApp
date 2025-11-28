@@ -1,6 +1,6 @@
 {
   "name": "ElectronApp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "productName": "ElectronApp",
   "description": "ElectronApp",
@@ -9,6 +9,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "build": "node ./webpack/build.js",
+    "publish": "electron-forge publish",
     "release": "node ./webpack/publish.js"
   },
   "author": "lizb",
