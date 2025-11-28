@@ -1,5 +1,6 @@
 import { BrowserWindow } from "electron";
 import MenuBuilder from "./menu";
+import path from "path";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
@@ -15,6 +16,7 @@ class MainBrowserWindow extends BrowserWindow {
         this.register()
     }
 
+
     /** 注册菜单 */
     register() {
         //关键点
@@ -26,8 +28,7 @@ class MainBrowserWindow extends BrowserWindow {
 
 const createBrowserWindow = () => {
     const mainWindow = new MainBrowserWindow({
-        width: 800,
-        height: 600,
+        show: false,
         backgroundColor: '#FFF', // 背景色 
         webPreferences: {
             devTools: true, // 配合隐藏快捷组合
@@ -36,6 +37,7 @@ const createBrowserWindow = () => {
             webSecurity: false, // 关闭同源策略
             allowRunningInsecureContent: true, // 允许https混合内容
             webviewTag: true,
+            preload: path.join(__dirname, '../../preload.js')
         },
     });
     return mainWindow;

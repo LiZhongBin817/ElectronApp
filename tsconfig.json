@@ -24,6 +24,7 @@
             "@/*": ["./src/*"],
             "*": ["node_modules/*"]
         }
+
     },
     "exclude": ["node_modules", "out", "lambda", "webpack", "electron-asar-hot-updater"]
 

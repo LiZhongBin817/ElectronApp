@@ -13,6 +13,7 @@ module.exports = {
         name: 'ElectronApp',
         authors: 'lizb',
         setupExe: 'ElectronAppSetup.exe',
+        noDesktopIcon:true,
         // setupIcon: 'path/to/icon.ico', // 如果有图标
         // iconUrl: 'https://your-icon-url.com/icon.ico', // 远程图标URL
         // loadingGif: 'path/to/loading.gif', // 安装过程动画（可选）
