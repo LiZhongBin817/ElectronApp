@@ -68,7 +68,7 @@ function devHotReload(opts = {}) {
     if (!isDev) return;                   // 生产直接退出
 
     const {
-        watchFolder = path.join(__dirname, 'src'),   // 渲染代码
+        watchFolder = path.join(__dirname, '../../src'),   // 渲染代码
         mainFolder = __dirname,                      // 主进程根
     } = opts;
 
@@ -98,16 +98,18 @@ function devHotReload(opts = {}) {
         app.exit(0);
     });
 
-    console.log(watchFolder,'watchFolder');
-    
+    console.log(watchFolder, 'watchFolder');
+
 
     // 2. 渲染进程整页刷新
-    chokidar.watch(watchFolder, { usePolling: true, ignored: ['**/node_modules/**', '**/out/**', '**/.git/**'] })
+    chokidar.watch(watchFolder, { usePolling: true, ignored: ['**/node_modules/**', '**/out/**', '**/.git/**', '**/.webpack/**'] })
         .on('all', (event, file) => {
             console.log('[HMR]', event, '→', file);
             if (event === 'change') {
                 BrowserWindow.getAllWindows().forEach(w => {
-                    if (!w.isDestroyed()) w.reload();
+                    if (w && !w.isDestroyed()) {
+                        w.reload();
+                    }
                 });
             }
         });

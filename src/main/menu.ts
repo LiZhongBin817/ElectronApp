@@ -1,6 +1,5 @@
-import { BrowserWindow, MenuItemConstructorOptions, Menu } from "electron";
-import localShortcut from 'electron-localShortcut';
-
+import { BrowserWindow, MenuItemConstructorOptions, Menu, app } from "electron";
+import localShortcut from 'electron-localshortcut';
 export default class MenuBuilder {
     mainWindow: BrowserWindow;
     template: MenuItemConstructorOptions[] = [];
@@ -19,7 +18,6 @@ export default class MenuBuilder {
     /** 菜单构建 */
     buildMenu(): Menu {
         this.bindShortCut();
-
         if (this.isDev) {
             this.setDevContextMenu();
         }
@@ -50,6 +48,8 @@ export default class MenuBuilder {
 
     // 开发环境, 右键菜单
     setDevContextMenu(): void {
+        console.log(222);
+
         this.mainWindow.webContents.on('context-menu', (_, props) => {
             const { x, y } = props;
             Menu.buildFromTemplate([
@@ -63,9 +63,14 @@ export default class MenuBuilder {
             ]).popup({ window: this.mainWindow });
         });
     }
-    
+
     // 菜单模板
-    getMenuTemplate(){
-        return []
+    getMenuTemplate(): MenuItemConstructorOptions[] {
+        return [
+            {
+                label: app.name,
+                submenu: [{ label: '退出', role: 'quit' }],
+            },
+        ]
     }
 }

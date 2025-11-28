@@ -1,13 +1,33 @@
 import { BrowserWindow } from "electron";
+import MenuBuilder from "./menu";
+
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+
 
 class MainBrowserWindow extends BrowserWindow {
     constructor(options: Electron.BrowserWindowConstructorOptions | undefined) {
         super(options);
+        this.run()
+    }
+
+    /** 主流程 */
+    run() {
+        this.register()
+    }
+
+    /** 注册菜单 */
+    register() {
+        //关键点
+        this.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+        const menu = new MenuBuilder(this)
+        menu.buildMenu()
     }
 }
 
 const createBrowserWindow = () => {
     const mainWindow = new MainBrowserWindow({
+        width: 800,
+        height: 600,
         backgroundColor: '#FFF', // 背景色 
         webPreferences: {
             devTools: true, // 配合隐藏快捷组合
@@ -18,7 +38,6 @@ const createBrowserWindow = () => {
             webviewTag: true,
         },
     });
-
     return mainWindow;
 }
 export default createBrowserWindow;
