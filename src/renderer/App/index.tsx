@@ -11,7 +11,7 @@ import {
 
 const App: Component = () => {
     return (
-        <HopeProvider>
+        <HopeProvider config={{ initialColorMode: "light" }}>
             <NotificationsProvider>
                 <Tabs>
                     <TabList>

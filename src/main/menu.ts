@@ -48,8 +48,6 @@ export default class MenuBuilder {
 
     // 开发环境, 右键菜单
     setDevContextMenu(): void {
-        console.log(222);
-
         this.mainWindow.webContents.on('context-menu', (_, props) => {
             const { x, y } = props;
             Menu.buildFromTemplate([
@@ -71,6 +69,6 @@ export default class MenuBuilder {
                 label: app.name,
                 submenu: [{ label: '退出', role: 'quit' }],
             },
-        ]
+        ] 
     }
 }

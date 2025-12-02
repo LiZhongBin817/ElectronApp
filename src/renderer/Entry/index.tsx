@@ -1,4 +1,8 @@
 import { render } from 'solid-js/web';
-import App from '../App/index';
+import App from '../App';
 
- render(() => <App />, document.getElementById('root') as HTMLElement)
+console.log('>>> index.tsx 被编译并执行了 <<<');
+const root = document.getElementById('root');
+console.log('root dom =', root);
+
+if (root) render(() => <App />, root);

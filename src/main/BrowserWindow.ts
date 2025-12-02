@@ -1,8 +1,8 @@
 import { BrowserWindow } from "electron";
 import MenuBuilder from "./menu";
-import path from "path";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 
 class MainBrowserWindow extends BrowserWindow {
@@ -37,10 +37,11 @@ const createBrowserWindow = () => {
             webSecurity: false, // 关闭同源策略
             allowRunningInsecureContent: true, // 允许https混合内容
             webviewTag: true,
-            preload: path.join(__dirname, '../../preload.js')
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         },
-    });
+    }); 
     return mainWindow;
+
 }
 export default createBrowserWindow;
 export { MainBrowserWindow };
