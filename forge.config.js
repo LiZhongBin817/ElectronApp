@@ -5,6 +5,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
   },
+  dev: false, // 设置为 false 以禁用开发模式
   rebuildConfig: {},
   makers: [
     {
