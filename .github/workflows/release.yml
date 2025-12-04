@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'          # 推送 v1.0.0 等标签时触发
+      - 'v*'          # 推送 v1.0.0 之类标签时触发
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -19,20 +19,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'npm'          # 官方 npm 缓存
+
+      - name: Cache node_modules & Webpack
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .webpack-cache
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
 
-      # 1️⃣ Forge 构建安装包
+      # 1.  Forge 构建安装包
       - name: Forge make
         run: npm run make
 
-      # 2️⃣ 生成 latest.yml / .blockmap（不重新打包）
+      # 2.  生成 latest.yml / .blockmap（不重新打包）
       - name: Generate latest.yml
         run: npx electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64
 
-      # 3️⃣ 创建 Release 并上传所有资产
+      # 3.  创建 Release 并上传资产
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
