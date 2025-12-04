@@ -1,6 +1,6 @@
 {
   "name": "ElectronApp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "productName": "ElectronApp",
   "description": "ElectronApp",
@@ -9,7 +9,7 @@
     "start": "electron-forge start",
     "make": "electron-forge make",
     "build": "node ./webpack/build.js",
-    "publish": "node ./webpack/publish.js",
+    "release": "node ./webpack/publish.js"
   },
   "author": "lizb",
   "license": "MIT",
