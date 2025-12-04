@@ -60,6 +60,7 @@ rmRetry(outDir).then(() => {
   // 5. 打包（无 await）
   console.log('[Build] 开始构建...');
   execSync('electron-forge make', { stdio: 'inherit' });
+  execSync('electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64', { stdio: 'inherit' });
   console.log('[Build] 构建完成 ✅');
 }).catch(err => {
   console.error('[Clean] 删除失败', err);

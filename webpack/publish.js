@@ -111,9 +111,6 @@ try {
   tagCreated = true; // 标记tag已经创建
   execSync(`git push ElectronApp main --tags`, { stdio: 'inherit' });
 
-  console.log('🔼 开始打包并上传 ...');
-  execSync('yarn run publish', { stdio: 'inherit' });
-
   console.log(`✅ 已完成：GitHub Releases 已上传 v${newVer}`);
 }
 catch (e) {

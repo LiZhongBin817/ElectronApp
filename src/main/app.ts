@@ -32,7 +32,7 @@ export class App {
         app.whenReady().then(async () => {
             // 启动APP自动更新 
             // 首次检查建议延迟 3-5 秒，避免刚启动就弹通知
-            setTimeout(() => setupAutoUpdater({ type: 'github', owner: 'LiZhongBin817', repo: 'ElectronApp', provider: 'github' }), 4000);
+            setTimeout(() => setupAutoUpdater({ type: 'custom', owner: 'LiZhongBin817', repo: 'ElectronApp', provider: 'github' }), 4000);
             this.win?.show();
         })
 

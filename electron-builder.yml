@@ -1,0 +1,6 @@
+publish:
+ provider: github
+ owner: LiZhongBin817
+ repo: ElectronApp
+ token: ${{ env.GITHUB_TOKEN }}
+ releaseType: release

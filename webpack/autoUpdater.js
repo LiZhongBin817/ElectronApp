@@ -65,27 +65,36 @@ function setupAutoUpdater(opts = {}) {
         // //     provider: 'generic',
         // //     url: 'http://localhost:3000',   // 指向本地 nupkg/RELEASES 目录
         // // });
-        autoUpdater.checkForUpdatesAndNotify();
-
-
+        autoUpdater.autoDownload = false; // 禁止自动下载
+        // 检查更新
+        autoUpdater.checkForUpdates();
     }
-    // 监听更新事件
-    autoUpdater.on('update-available', () => {
+
+    // 有新版本时提示用户
+    autoUpdater.on('update-available', (info) => {
         dialog.showMessageBox({
             type: 'info',
             title: '更新提示',
-            message: '检测到新版本，正在下载...'
+            message: `发现新版本 ${info.version}，是否下载？`,
+            buttons: ['下载', '取消']
+        }).then((res) => {
+            if (res.response === 0) {
+                autoUpdater.downloadUpdate();
+            }
         });
     });
 
+    // 下载完成后安装更新
     autoUpdater.on('update-downloaded', () => {
         dialog.showMessageBox({
             type: 'info',
-            title: '安装更新',
-            message: '下载完成，点击确定安装并重启应用。',
-            buttons: ['确定']
-        }).then(() => {
-            autoUpdater.quitAndInstall();
+            title: '更新完成',
+            message: '更新已下载完成，是否立即安装？',
+            buttons: ['是', '否']
+        }).then((res) => {
+            if (res.response === 0) {
+                autoUpdater.quitAndInstall();
+            }
         });
     });
 }

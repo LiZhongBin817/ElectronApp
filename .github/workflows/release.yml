@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'          # 推送 v1.0.0 等标签时触发
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 1️⃣ Forge 构建安装包
+      - name: Forge make
+        run: npm run make
+
+      # 2️⃣ 生成 latest.yml / .blockmap（不重新打包）
+      - name: Generate latest.yml
+        run: npx electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64
+
+      # 3️⃣ 创建 Release 并上传所有资产
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/make/squirrel-windows/*.exe
+            dist/latest.yml
+            dist/*.blockmap
+          draft: false
+          prerelease: false

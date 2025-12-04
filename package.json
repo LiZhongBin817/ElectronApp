@@ -7,10 +7,9 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
+    "make": "electron-forge make",
     "build": "node ./webpack/build.js",
-    "publish": "electron-forge publish",
-    "release": "node ./webpack/publish.js"
+    "publish": "node ./webpack/publish.js",
   },
   "author": "lizb",
   "license": "MIT",
