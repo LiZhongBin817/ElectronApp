@@ -37,7 +37,7 @@ const bumpPatchVersion = (version) => {
   return `${major}.${minor}.${patch + 1}`;
 };
 
-const tagExists = (tagName) => {
+const hasLocalTag = (tagName) => {
   try {
     output(`git rev-parse --verify --quiet refs/tags/${tagName}`);
     return true;
@@ -46,15 +46,20 @@ const tagExists = (tagName) => {
   }
 };
 
-const ensureCleanReleaseFiles = () => {
-  const status = output('git status --short');
-  const blockingChanges = status
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .filter((line) => !line.includes('package.json') && !line.includes('pnpm-lock.yaml'));
+const hasRemoteTag = (tagName) => {
+  try {
+    const result = output(`git ls-remote --tags ${remoteName} refs/tags/${tagName}`);
+    return result.length > 0;
+  } catch (error) {
+    throw new Error(`检查远程 tag 失败：${error.message}`);
+  }
+};
 
-  if (blockingChanges.length > 0) {
-    throw new Error(`存在未提交改动，请先处理后再发布：\n${blockingChanges.join('\n')}`);
+const ensureCleanWorkingTree = () => {
+  const status = output('git status --short');
+
+  if (status) {
+    throw new Error(`存在未提交改动，请先提交或清理后再发布：\n${status}`);
   }
 };
 
@@ -63,10 +68,14 @@ const newVersion = bumpPatchVersion(originalPackage.version);
 const tagName = `v${newVersion}`;
 
 try {
-  ensureCleanReleaseFiles();
+  ensureCleanWorkingTree();
 
-  if (tagExists(tagName)) {
+  if (hasLocalTag(tagName)) {
     throw new Error(`本地 tag 已存在：${tagName}`);
+  }
+
+  if (hasRemoteTag(tagName)) {
+    throw new Error(`远程 tag 已存在：${tagName}，请提升版本号后再发布`);
   }
 
   const packageJson = readPackage();
@@ -79,18 +88,19 @@ try {
   run(`git tag "${tagName}"`);
 
   const currentBranch = output('git branch --show-current') || 'main';
-  run(`git push ${remoteName} ${currentBranch} --tags`);
+  run(`git push ${remoteName} ${currentBranch}`);
+  run(`git push ${remoteName} "${tagName}"`);
 
   console.log(`[Release] 已推送 ${tagName}，GitHub Actions 将负责构建并发布 Release。`);
 } catch (error) {
   writePackage(originalPackage);
 
   try {
-    if (tagExists(tagName)) {
+    if (hasLocalTag(tagName)) {
       run(`git tag -d "${tagName}"`);
     }
   } catch {
-    // tag 回滚失败时只保留原始错误。
+    // 回滚失败时保留原始错误。
   }
 
   console.error('[Release] 发布失败：', error.message);
