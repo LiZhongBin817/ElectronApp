@@ -1,61 +1,72 @@
-import { app, BrowserWindow, ipcMain } from "electron"
-import createBrowserWindow from "./BrowserWindow"
+import { app, BrowserWindow } from "electron";
+import createBrowserWindow from "./BrowserWindow";
 import { setupAutoUpdater } from "../../webpack/autoUpdater";
-import * as squirrel from 'electron-squirrel-startup'; // 官方封装
 
 export class App {
-    win?: BrowserWindow | null
-    constructor() {
-        // 初始化
-        this.listen()
+  win?: BrowserWindow | null;
+
+  constructor() {
+    if (!this.pre()) {
+      return;
     }
 
-    pre() {
-        // 1️⃣ 如果是 Squirrel 安装/更新/卸载事件，交给库处理，立即退出
-        if (squirrel) {
-            // 库内部已调 quit()，这里直接 return 即可
-            process.exit(0);
-        }
+    this.listen();
+  }
 
-        // 2️⃣ 普通启动
-        const gotTheLock = app.requestSingleInstanceLock();
-        if (!gotTheLock) {
-            app.quit();
-            process.exit(0);
-        }
+  pre() {
+    const gotTheLock = app.requestSingleInstanceLock();
+
+    if (!gotTheLock) {
+      app.quit();
+      return false;
     }
 
-    /** 监听应用事件 */
-    listen() {
-        app.on('ready', this.launch.bind(this));
+    app.on("second-instance", () => {
+      if (!this.win) {
+        return;
+      }
 
-        app.whenReady().then(async () => {
-            // 启动APP自动更新 
-            // 首次检查建议延迟 3-5 秒，避免刚启动就弹通知
-            setTimeout(() => setupAutoUpdater({ type: 'custom', owner: 'LiZhongBin817', repo: 'ElectronApp', provider: 'github' }), 4000);
-            this.win?.show();
-        })
+      if (this.win.isMinimized()) {
+        this.win.restore();
+      }
 
+      this.win.focus();
+    });
 
-        // 如果没有窗口打开则打开一个窗口 (macOS)
-        app.on('activate', () => {
-            if (BrowserWindow.getAllWindows().length === 0) createBrowserWindow()
-        })
+    return true;
+  }
 
+  /** 监听应用事件 */
+  listen() {
+    app.on("ready", this.launch.bind(this));
 
-        // 关闭所有窗口时退出应用 (Windows & Linux) 
-        app.on('window-all-closed', () => {
-            if (process.platform !== 'darwin') app.quit()
-        })
+    app.whenReady().then(async () => {
+      // 打包环境启动后延迟检查更新，避免刚打开窗口就弹提示。
+      setTimeout(() => setupAutoUpdater(), 4000);
+      this.win?.show();
+    });
+
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        this.win = createBrowserWindow();
+      }
+    });
+
+    app.on("window-all-closed", () => {
+      if (process.platform !== "darwin") {
+        app.quit();
+      }
+    });
+  }
+
+  /** 启动主窗口 */
+  async launch() {
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+
+    if (this.win) {
+      this.win.destroy();
     }
 
-    /** 启动窗口 */
-    async launch() {
-        process.env.ELECTRON_DISABLE_SECURITY_WARRING = 'true'; // 关闭警告
-
-        if (this.win) {
-            this.win.destroy();
-        }
-        this.win = createBrowserWindow()
-    }
+    this.win = createBrowserWindow();
+  }
 }

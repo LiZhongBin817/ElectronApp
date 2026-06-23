@@ -19,7 +19,7 @@ const App: Component = () => {
                         <Tab>标签2</Tab>
                     </TabList>
                     <TabPanel>
-                        <p>面板1内容</p>
+                        <p>面板1内容-这是新版本</p>
                     </TabPanel>
                     <TabPanel>
                         <p>面板2内容</p>

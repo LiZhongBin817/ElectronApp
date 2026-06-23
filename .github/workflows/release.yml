@@ -3,7 +3,10 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'          # 推送 v1.0.0 之类标签时触发
+      - 'v*'
+
+permissions:
+  contents: write
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -11,43 +14,38 @@ env:
 jobs:
   release:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'          # 官方 npm 缓存
+          node-version: 20.19.0
+          cache: pnpm
 
-      - name: Cache node_modules & Webpack
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            .webpack-cache
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Use HTTPS for GitHub git dependencies
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      # 1.  Forge 构建安装包
-      - name: Forge make
-        run: npm run make
+      - name: Build installer
+        run: pnpm run dist
 
-      # 2.  生成 latest.yml / .blockmap（不重新打包）
-      - name: Generate latest.yml
-        run: npx electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64
-
-      # 3.  创建 Release 并上传资产
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            out/make/squirrel-windows/*.exe
+            dist/*.exe
             dist/latest.yml
             dist/*.blockmap
           draft: false

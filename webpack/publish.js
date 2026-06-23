@@ -1,121 +1,98 @@
 #!/usr/bin/env node
-/**
- * 一键完成：
- * 1. 版本号 patch+1
- * 2. 打 tag 并 push 到 GitHub
- * 3. 用 electron-forge 打包并上传到 GitHub Releases
- * 使用前先 export GITHUB_TOKEN=ghp_xxxxxxxx
- */
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
 
-// 获取 package.json 文件路径
-const packagePath = path.resolve(__dirname, '../package.json');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execSync } = require('node:child_process');
 
-// 读取原始版本号
-const originalPkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-const originalVer = originalPkg.version;
+const root = path.resolve(__dirname, '..');
+const packagePath = path.join(root, 'package.json');
+const remoteName = 'ElectronApp';
 
-// 跟踪tag是否已创建
-let tagCreated = false;
-// 检查标签是否已存在
-const tagExists = (version) => {
+const run = (command) => {
+  execSync(command, {
+    cwd: root,
+    stdio: 'inherit',
+  });
+};
+
+const output = (command) => execSync(command, {
+  cwd: root,
+  encoding: 'utf8',
+}).trim();
+
+const readPackage = () => JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+
+const writePackage = (packageJson) => {
+  fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+};
+
+const bumpPatchVersion = (version) => {
+  const parts = version.split('.').map(Number);
+
+  if (parts.length !== 3 || parts.some((item) => Number.isNaN(item))) {
+    throw new Error(`版本号格式不正确：${version}`);
+  }
+
+  const [major, minor, patch] = parts;
+  return `${major}.${minor}.${patch + 1}`;
+};
+
+const tagExists = (tagName) => {
   try {
-    execSync(`git rev-parse "v${version}"`, { stdio: 'ignore' });
+    output(`git rev-parse --verify --quiet refs/tags/${tagName}`);
     return true;
   } catch {
     return false;
   }
 };
 
-// 回退tag和版本号的函数
-const rollback = (version) => {
-  console.log('🔄 正在回退...');
+const ensureCleanReleaseFiles = () => {
+  const status = output('git status --short');
+  const blockingChanges = status
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .filter((line) => !line.includes('package.json') && !line.includes('pnpm-lock.yaml'));
 
-  // 回退tag
-  try {
-    if (tagCreated) {
-      execSync(`git tag -d "v${version}"`, { stdio: 'inherit' });
-      execSync(`git push ElectronApp :refs/tags/v${version}`, { stdio: 'inherit' });
-      console.log('✅ Tag回退完成');
-    } else {
-      console.log('ℹ️ 未创建tag，无需回退');
-    }
-  } catch (rollbackError) {
-    console.error('⚠️ Tag回退失败:', rollbackError.message);
+  if (blockingChanges.length > 0) {
+    throw new Error(`存在未提交改动，请先处理后再发布：\n${blockingChanges.join('\n')}`);
   }
+};
 
-  // 回退 package.json 和 package-lock.json 版本号
-  try {
-    const currentPkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    currentPkg.version = originalVer;
-    fs.writeFileSync(packagePath, JSON.stringify(currentPkg, null, 2) + '\n');
-
-    // 更新 package-lock.json
-    const lockFilePath = path.resolve(__dirname, '../package-lock.json');
-    const lockFile = JSON.parse(fs.readFileSync(lockFilePath, 'utf8'));
-    lockFile.name = 'Electron_App'; // 确保名称正确
-    lockFile.version = originalVer; // 更新版本号
-
-    // 更新所有依赖项的版本号
-    Object.keys(lockFile.dependencies || {}).forEach(depName => {
-      if (lockFile.dependencies[depName].version) {
-        lockFile.dependencies[depName].version = originalVer;
-      }
-    });
-
-    fs.writeFileSync(lockFilePath, JSON.stringify(lockFile, null, 2) + '\n');
-
-    execSync(`git add package.json package-lock.json`, { stdio: 'inherit' });
-    execSync(`git commit -m "Revert to version ${originalVer}"`, { stdio: 'inherit' });
-    console.log('✅ 版本号回退完成');
-  } catch (versionRollbackError) {
-    console.error('⚠️ 版本号回退失败:', versionRollbackError.message);
-  }
-}
-
-const token = process.env.GITHUB_TOKEN;
-if (!token) {
-  console.error('❌ 请先设置环境变量 GITHUB_TOKEN');
-  process.exit(1);
-}
-
-const repoUrl = execSync('git remote get-url ElectronApp', { encoding: 'utf8' }).trim();
-if (!repoUrl.includes('github.com')) {
-  console.error('❌ 远程仓库不是 GitHub');
-  process.exit(1);
-}
-
-console.log(`🔼 版本号从 ${originalVer} +1 ...`);
-execSync('npm version patch --no-git-tag-version', { stdio: 'inherit' });
-const pkg = require('../package.json');
-const newVer = pkg.version;
+const originalPackage = readPackage();
+const newVersion = bumpPatchVersion(originalPackage.version);
+const tagName = `v${newVersion}`;
 
 try {
-  // 检查标签是否已存在
-  if (tagExists(newVer)) {
-    console.warn(`⚠️ 标签 v${newVer} 已存在，正在删除旧标签...`);
-    execSync(`git tag -d "v${newVer}"`, { stdio: 'inherit' });
-    try {
-      execSync(`git push ElectronApp :refs/tags/v${newVer}`, { stdio: 'inherit' });
-    } catch (e) {
-      console.warn('⚠️ 远程标签删除失败（可能不存在）');
-    }
+  ensureCleanReleaseFiles();
+
+  if (tagExists(tagName)) {
+    throw new Error(`本地 tag 已存在：${tagName}`);
   }
 
-  console.log('🔼 创建并推送 tag ...');
-  execSync(`git add package.json package-lock.json`, { stdio: 'inherit' });
-  execSync(`git commit -m "v${newVer}"`, { stdio: 'inherit' });
-  execSync(`git tag "v${newVer}"`, { stdio: 'inherit' });
-  tagCreated = true; // 标记tag已经创建
-  execSync(`git push ElectronApp main --tags`, { stdio: 'inherit' });
+  const packageJson = readPackage();
+  packageJson.version = newVersion;
+  writePackage(packageJson);
 
-  console.log(`✅ 已完成：GitHub Releases 已上传 v${newVer}`);
-}
-catch (e) {
-  console.error('❌ 发布失败:', e.message);
-  // 发布失败时回退tag和版本号
-  rollback(newVer);
+  console.log(`[Release] 版本号：${originalPackage.version} -> ${newVersion}`);
+  run('git add package.json pnpm-lock.yaml');
+  run(`git commit -m "v${newVersion}"`);
+  run(`git tag "${tagName}"`);
+
+  const currentBranch = output('git branch --show-current') || 'main';
+  run(`git push ${remoteName} ${currentBranch} --tags`);
+
+  console.log(`[Release] 已推送 ${tagName}，GitHub Actions 将负责构建并发布 Release。`);
+} catch (error) {
+  writePackage(originalPackage);
+
+  try {
+    if (tagExists(tagName)) {
+      run(`git tag -d "${tagName}"`);
+    }
+  } catch {
+    // tag 回滚失败时只保留原始错误。
+  }
+
+  console.error('[Release] 发布失败：', error.message);
   process.exit(1);
 }

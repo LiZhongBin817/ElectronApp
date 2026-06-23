@@ -1,6 +1,26 @@
+appId: com.lizb.electronapp
+productName: ElectronApp
+
+directories:
+  output: dist
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ${productName}
+
 publish:
- provider: github
- owner: LiZhongBin817
- repo: ElectronApp
- token: ${{ env.GITHUB_TOKEN }}
- releaseType: release
+  provider: github
+  owner: LiZhongBin817
+  repo: ElectronApp
+  releaseType: release

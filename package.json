@@ -5,10 +5,13 @@
   "productName": "ElectronApp",
   "description": "ElectronApp",
   "main": ".webpack/main",
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "start": "electron-forge start",
-    "make": "electron-forge make",
+    "package": "electron-forge package --platform=win32 --arch=x64",
     "build": "node ./webpack/build.js",
+    "dist": "pnpm run build",
+    "make": "pnpm run build",
     "release": "node ./webpack/publish.js"
   },
   "author": "lizb",
@@ -17,19 +20,10 @@
     "@babel/core": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@electron-forge/cli": "^7.10.2",
-    "@electron-forge/maker-deb": "^7.10.2",
-    "@electron-forge/maker-rpm": "^7.10.2",
-    "@electron-forge/maker-squirrel": "^7.10.2",
-    "@electron-forge/maker-zip": "^7.10.2",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-forge/plugin-webpack": "^7.10.2",
-    "@electron-forge/publisher-github": "^7.10.2",
     "@electron/fuses": "^1.8.0",
-    "@prefresh/webpack": "^4.0.6",
     "@types/electron-localshortcut": "^3.1.3",
-    "@types/electron-squirrel-startup": "^1.0.2",
-    "@types/prefresh__webpack": "^3.3.3",
     "@types/react": "^19.2.7",
     "@vitejs/plugin-react": "^5.1.1",
     "babel-loader": "^10.0.0",
@@ -38,15 +32,14 @@
     "electron-builder": "^26.0.12",
     "electron-log": "^5.4.3",
     "electron-reload": "^2.0.0-alpha.1",
-    "electron-squirrel-startup": "^1.0.1",
     "fork-ts-checker-webpack-plugin": "^9.1.0",
     "mini-css-extract-plugin": "^2.9.4",
+    "solid-refresh": "^0.7.8",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "@electron-forge/maker-wix": "^7.10.2",
     "@hope-ui/solid": "^0.6.7",
     "@stitches/core": "^1.2.8",
     "chokidar": "^5.0.0",
@@ -54,8 +47,11 @@
     "electron-localshortcut": "^3.2.1",
     "electron-updater": "^6.6.2",
     "solid-js": "^1.9.10",
-    "solid-transition-group": "^0.0.10",
-    "update-electron-app": "^3.1.1",
-    "yarn": "^1.22.22"
+    "solid-transition-group": "^0.0.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   }
 }
