@@ -6,7 +6,18 @@ const { autoUpdater } = require('electron-updater');
 let updaterStarted = false;
 
 function setupAutoUpdater(options = {}) {
-  if (isDev || updaterStarted) {
+  autoUpdater.logger = log;
+  log.transports.file.level = 'info';
+
+  log.info('[Updater] 初始化自动更新模块。');
+
+  if (isDev) {
+    log.info('[Updater] 当前为开发模式，跳过自动更新。');
+    return;
+  }
+
+  if (updaterStarted) {
+    log.info('[Updater] 自动更新已启动，跳过重复初始化。');
     return;
   }
 
@@ -18,9 +29,7 @@ function setupAutoUpdater(options = {}) {
     repo = 'ElectronApp',
   } = options;
 
-  autoUpdater.logger = log;
   autoUpdater.autoDownload = false;
-  log.transports.file.level = 'info';
 
   autoUpdater.setFeedURL({
     provider,
@@ -28,6 +37,8 @@ function setupAutoUpdater(options = {}) {
     repo,
     releaseType: 'release',
   });
+
+  log.info('[Updater] 更新源配置完成：', { provider, owner, repo });
 
   autoUpdater.on('error', (error) => {
     log.error('[Updater] 检查更新失败：', error);

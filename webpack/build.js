@@ -29,6 +29,21 @@ const removeDir = (targetDir) => {
   });
 };
 
+const writeUpdateConfig = () => {
+  const resourcesDir = path.join(outDir, 'ElectronApp-win32-x64', 'resources');
+  const updateConfigPath = path.join(resourcesDir, 'app-update.yml');
+  const updateConfig = [
+    'provider: github',
+    'owner: LiZhongBin817',
+    'repo: ElectronApp',
+    'releaseType: release',
+    'updaterCacheDirName: electronapp-updater',
+    '',
+  ].join('\n');
+
+  fs.writeFileSync(updateConfigPath, updateConfig);
+};
+
 const closeRunningApp = () => {
   try {
     if (process.platform === 'win32') {
@@ -51,6 +66,7 @@ removeDir(distDir);
 
 console.log('[Build] 使用 Electron Forge 生成预打包目录...');
 run('electron-forge package --platform=win32 --arch=x64');
+writeUpdateConfig();
 
 console.log('[Build] 使用 electron-builder 生成 NSIS 安装包和更新元数据...');
 run('electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64');
