@@ -66,6 +66,7 @@ const ensureCleanWorkingTree = () => {
 const originalPackage = readPackage();
 const newVersion = bumpPatchVersion(originalPackage.version);
 const tagName = `v${newVersion}`;
+let versionCommitted = false;
 
 try {
   ensureCleanWorkingTree();
@@ -85,6 +86,7 @@ try {
   console.log(`[Release] 版本号：${originalPackage.version} -> ${newVersion}`);
   run('git add package.json pnpm-lock.yaml');
   run(`git commit -m "v${newVersion}"`);
+  versionCommitted = true;
   run(`git tag "${tagName}"`);
 
   const currentBranch = output('git branch --show-current') || 'main';
@@ -93,10 +95,12 @@ try {
 
   console.log(`[Release] 已推送 ${tagName}，GitHub Actions 将负责构建并发布 Release。`);
 } catch (error) {
-  writePackage(originalPackage);
+  if (!versionCommitted) {
+    writePackage(originalPackage);
+  }
 
   try {
-    if (hasLocalTag(tagName)) {
+    if (!versionCommitted && hasLocalTag(tagName)) {
       run(`git tag -d "${tagName}"`);
     }
   } catch {
