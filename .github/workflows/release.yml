@@ -37,7 +37,7 @@ jobs:
           git config --global url."https://github.com/".insteadOf "git+ssh://git@github.com/"
           git config --global url."https://github.com/".insteadOf "git+https://git@github.com:"
           git config --global url."https://github.com/".insteadOf "https://git@github.com:"
-          git config --global --get-regexp "url\\..*\\.insteadOf"
+          git config --global --list
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
