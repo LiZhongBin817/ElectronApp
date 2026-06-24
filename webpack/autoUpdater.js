@@ -1,5 +1,4 @@
-const { dialog } = require('electron');
-const isDev = require('electron-is-dev');
+const { app, dialog } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 
@@ -11,7 +10,7 @@ function setupAutoUpdater(options = {}) {
 
   log.info('[Updater] 初始化自动更新模块。');
 
-  if (isDev) {
+  if (!app.isPackaged) {
     log.info('[Updater] 当前为开发模式，跳过自动更新。');
     return;
   }

@@ -43,7 +43,6 @@
     "@hope-ui/solid": "^0.6.7",
     "@stitches/core": "^1.2.8",
     "chokidar": "^5.0.0",
-    "electron-is-dev": "^3.0.1",
     "electron-localshortcut": "^3.2.1",
     "electron-updater": "^6.6.2",
     "solid-js": "^1.9.10",
