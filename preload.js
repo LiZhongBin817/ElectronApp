@@ -1,12 +1,20 @@
-const { contextBridge,ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('versions', {
+const versions = {
   node: () => process.versions.node,
   chrome: () => process.versions.chrome,
-  electron: () => process.versions.electron
-  // 除函数之外，我们也可以暴露变量
-})
+  electron: () => process.versions.electron,
+};
 
-contextBridge.exposeInMainWorld('$api', {
+const appApi = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
-});
+  getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+};
+
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('versions', versions);
+  contextBridge.exposeInMainWorld('$api', appApi);
+} else {
+  window.versions = versions;
+  window.$api = appApi;
+}

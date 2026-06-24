@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import createBrowserWindow from "./BrowserWindow";
 import { setupAutoUpdater } from "../../webpack/autoUpdater";
 
@@ -10,7 +10,13 @@ export class App {
       return;
     }
 
+    this.registerIpc();
     this.listen();
+  }
+
+  /** 注册主进程接口 */
+  registerIpc() {
+    ipcMain.handle("app:get-version", () => app.getVersion());
   }
 
   pre() {
