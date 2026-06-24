@@ -9,6 +9,14 @@ const versions = {
 const appApi = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  onUpdaterStatus: (callback) => {
+    const listener = (_event, status) => callback(status);
+    ipcRenderer.on('updater:status', listener);
+
+    return () => {
+      ipcRenderer.removeListener('updater:status', listener);
+    };
+  },
 };
 
 if (process.contextIsolated) {

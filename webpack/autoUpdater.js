@@ -1,8 +1,44 @@
-const { app, dialog } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 
+const UPDATER_STATUS_CHANNEL = 'updater:status';
 let updaterStarted = false;
+
+const normalizeProgressPercent = (percent) => {
+  if (!Number.isFinite(percent)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, percent));
+};
+
+const getErrorMessage = (error) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return '未知错误';
+};
+
+const sendUpdaterStatus = (status) => {
+  const updaterStatus = {
+    timestamp: Date.now(),
+    ...status,
+  };
+
+  BrowserWindow.getAllWindows().forEach((browserWindow) => {
+    if (browserWindow.isDestroyed()) {
+      return;
+    }
+
+    browserWindow.webContents.send(UPDATER_STATUS_CHANNEL, updaterStatus);
+  });
+};
 
 function setupAutoUpdater(options = {}) {
   autoUpdater.logger = log;
@@ -41,17 +77,36 @@ function setupAutoUpdater(options = {}) {
 
   autoUpdater.on('error', (error) => {
     log.error('[Updater] 检查更新失败：', error);
+    sendUpdaterStatus({
+      status: 'error',
+      message: `更新检查失败：${getErrorMessage(error)}`,
+    });
   });
 
   autoUpdater.on('checking-for-update', () => {
     log.info('[Updater] 正在检查更新...');
+    sendUpdaterStatus({
+      status: 'checking',
+      message: '正在检查更新...',
+    });
   });
 
   autoUpdater.on('update-not-available', (info) => {
     log.info('[Updater] 当前已是最新版本：', info.version);
+    sendUpdaterStatus({
+      status: 'not-available',
+      version: info.version,
+      message: '当前已是最新版本',
+    });
   });
 
   autoUpdater.on('update-available', async (info) => {
+    sendUpdaterStatus({
+      status: 'available',
+      version: info.version,
+      message: `发现新版本 ${info.version}`,
+    });
+
     const result = await dialog.showMessageBox({
       type: 'info',
       title: '发现新版本',
@@ -61,17 +116,53 @@ function setupAutoUpdater(options = {}) {
     });
 
     if (result.response === 0) {
+      sendUpdaterStatus({
+        status: 'downloading',
+        version: info.version,
+        percent: 0,
+        message: `正在下载更新：${info.version}`,
+      });
+
       autoUpdater.downloadUpdate().catch((error) => {
         log.error('[Updater] 下载更新失败：', error);
+        sendUpdaterStatus({
+          status: 'error',
+          version: info.version,
+          message: `下载更新失败：${getErrorMessage(error)}`,
+        });
       });
+
+      return;
     }
+
+    sendUpdaterStatus({
+      status: 'cancelled',
+      version: info.version,
+      message: '已取消本次更新下载',
+    });
   });
 
   autoUpdater.on('download-progress', (progress) => {
-    log.info(`[Updater] 下载进度：${progress.percent.toFixed(2)}%`);
+    const percent = normalizeProgressPercent(progress.percent);
+    log.info(`[Updater] 下载进度：${percent.toFixed(2)}%`);
+    sendUpdaterStatus({
+      status: 'downloading',
+      percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total,
+      message: `正在下载更新：${percent.toFixed(2)}%`,
+    });
   });
 
-  autoUpdater.on('update-downloaded', async () => {
+  autoUpdater.on('update-downloaded', async (info) => {
+    sendUpdaterStatus({
+      status: 'downloaded',
+      version: info.version,
+      percent: 100,
+      message: '更新已下载，等待安装',
+    });
+
     const result = await dialog.showMessageBox({
       type: 'info',
       title: '更新已下载',
@@ -87,6 +178,10 @@ function setupAutoUpdater(options = {}) {
 
   autoUpdater.checkForUpdates().catch((error) => {
     log.error('[Updater] 检查更新异常：', error);
+    sendUpdaterStatus({
+      status: 'error',
+      message: `检查更新异常：${getErrorMessage(error)}`,
+    });
   });
 }
 
