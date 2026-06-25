@@ -1,5 +1,5 @@
-appId: com.lizb.electronapp
-productName: ElectronApp
+appId: com.lizb.timemanagesystem
+productName: TimeManageSystem
 
 directories:
   output: dist

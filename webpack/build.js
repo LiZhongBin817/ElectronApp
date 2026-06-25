@@ -10,6 +10,12 @@ const distDir = path.join(root, 'dist');
 const packagePath = path.join(root, 'package.json');
 const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 const appName = packageJson.productName || packageJson.name;
+const packagedDirName = `${appName}-win32-x64`;
+const commandExtension = process.platform === 'win32' ? '.cmd' : '';
+
+const localBin = (name) => path.join(root, 'node_modules', '.bin', `${name}${commandExtension}`);
+
+const quoted = (value) => `"${value}"`;
 
 const run = (command) => {
   execSync(command, {
@@ -30,14 +36,14 @@ const removeDir = (targetDir) => {
 };
 
 const writeUpdateConfig = () => {
-  const resourcesDir = path.join(outDir, 'ElectronApp-win32-x64', 'resources');
+  const resourcesDir = path.join(outDir, packagedDirName, 'resources');
   const updateConfigPath = path.join(resourcesDir, 'app-update.yml');
   const updateConfig = [
     'provider: github',
     'owner: LiZhongBin817',
     'repo: ElectronApp',
     'releaseType: release',
-    'updaterCacheDirName: electronapp-updater',
+    'updaterCacheDirName: timemanagesystem-updater',
     '',
   ].join('\n');
 
@@ -65,10 +71,10 @@ removeDir(outDir);
 removeDir(distDir);
 
 console.log('[Build] 使用 Electron Forge 生成预打包目录...');
-run('electron-forge package --platform=win32 --arch=x64');
+run(`${quoted(localBin('electron-forge'))} package --platform=win32 --arch=x64`);
 writeUpdateConfig();
 
 console.log('[Build] 使用 electron-builder 生成 NSIS 安装包和更新元数据...');
-run('electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64');
+run(`${quoted(localBin('electron-builder'))} --win --x64 --publish never --prepackaged out/${packagedDirName}`);
 
 console.log('[Build] 构建完成。');

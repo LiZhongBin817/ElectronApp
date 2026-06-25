@@ -23,7 +23,6 @@ module.exports = (_env, argv = {}) => {
             options: {
               presets: [
                 ['@babel/preset-typescript', { allExtensions: true, isTSX: true }],
-                'babel-preset-solid',
               ],
             },
           },

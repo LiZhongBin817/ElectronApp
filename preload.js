@@ -9,6 +9,13 @@ const versions = {
 const appApi = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  getApiRuntimeConfig: () => ipcRenderer.invoke('api:get-runtime-config'),
+  setRemoteApiBaseUrl: (value) => ipcRenderer.invoke('api:set-remote-base-url', value),
+  useLocalApiBaseUrl: () => ipcRenderer.invoke('api:use-local-base-url'),
+  getApiBaseUrl: () => {
+    const apiBaseUrl = ipcRenderer.sendSync('api:get-base-url-sync');
+    return apiBaseUrl || process.env.TMS_API_BASE_URL || 'http://127.0.0.1:4000/api';
+  },
   onUpdaterStatus: (callback) => {
     const listener = (_event, status) => callback(status);
     ipcRenderer.on('updater:status', listener);

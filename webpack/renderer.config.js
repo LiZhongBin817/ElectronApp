@@ -1,4 +1,5 @@
 const path = require('node:path');
+const { VueLoaderPlugin } = require('vue-loader');
 
 const usePath = (src) => path.resolve(__dirname, src);
 
@@ -7,10 +8,18 @@ module.exports = (_env, argv = {}) => {
 
   return {
     target: 'electron-renderer',
+    entry: path.resolve(__dirname, '../src/renderer/index.tsx'),
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? 'source-map' : 'eval-source-map',
+    plugins: [
+      new VueLoaderPlugin(),
+    ],
     module: {
       rules: [
+        {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+        },
         {
           test: /\.tsx?$/,
           use: {
@@ -18,14 +27,18 @@ module.exports = (_env, argv = {}) => {
             options: {
               presets: [
                 ['@babel/preset-typescript', { allExtensions: true, isTSX: true }],
-                'babel-preset-solid',
               ],
-              plugins: isProduction
-                ? []
-                : [['solid-refresh/babel', { bundler: 'webpack5' }]],
             },
           },
           exclude: /node_modules/,
+        },
+        {
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader'],
+        },
+        {
+          test: /\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$/,
+          type: 'asset/resource',
         },
       ],
     },
@@ -51,7 +64,7 @@ module.exports = (_env, argv = {}) => {
         '@puppeteer': usePath('../src/renderer/utils/puppeteer'),
         '@PowerFetch': usePath('../src/renderer/utils/network/PowerFetch'),
       },
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.vue', '.json'],
     },
   };
 };

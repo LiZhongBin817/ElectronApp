@@ -1,5 +1,1 @@
-
-const main=()=>{
-    import("./Entry/index")
-}
-main()
+import './main';

@@ -4,6 +4,10 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    extraResource: [
+      './node_modules/sql.js/dist/sql-wasm.js',
+      './node_modules/sql.js/dist/sql-wasm.wasm',
+    ],
   },
   rebuildConfig: {},
   plugins: [
@@ -11,6 +15,8 @@ module.exports = {
       name: '@electron-forge/plugin-webpack',
       config: {
         mainConfig: './webpack/main.config.js',
+        port: 3100,
+        loggerPort: 9100,
         devContentSecurityPolicy:
           "connect-src 'self' http://127.0.0.1:* http://localhost:* wss://127.0.0.1:7693 http://api.jfbym.com 'unsafe-eval'",
         renderer: {

@@ -28,6 +28,11 @@ class MainBrowserWindow extends BrowserWindow {
 
 const createBrowserWindow = () => {
     const mainWindow = new MainBrowserWindow({
+        width: 1280,
+        height: 820,
+        minWidth: 1024,
+        minHeight: 680,
+        title: '任务管理系统',
         show: false,
         backgroundColor: '#FFF', // 背景色 
         webPreferences: {
