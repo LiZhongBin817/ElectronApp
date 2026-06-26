@@ -1,6 +1,6 @@
 {
   "name": "local-service-manager",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "private": true,
   "productName": "本地服务管理器",
   "description": "本地 Redis、Zookeeper、Nacos 服务管理工具",
