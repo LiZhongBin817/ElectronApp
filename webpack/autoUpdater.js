@@ -43,6 +43,7 @@ const sendUpdaterStatus = (status) => {
 function setupAutoUpdater(options = {}) {
   autoUpdater.logger = log;
   log.transports.file.level = 'info';
+  log.transports.console.level = false;
 
   log.info('[Updater] 初始化自动更新模块。');
 

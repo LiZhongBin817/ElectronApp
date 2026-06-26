@@ -28,6 +28,7 @@ class MainBrowserWindow extends BrowserWindow {
 
 const createBrowserWindow = () => {
     const mainWindow = new MainBrowserWindow({
+        title: '本地服务管理器',
         show: false,
         backgroundColor: '#FFF', // 背景色 
         webPreferences: {

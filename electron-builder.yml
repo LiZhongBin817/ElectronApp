@@ -1,5 +1,5 @@
 appId: com.lizb.electronapp
-productName: ElectronApp
+productName: 本地服务管理器
 
 directories:
   output: dist

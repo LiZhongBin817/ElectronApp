@@ -10,6 +10,7 @@ const distDir = path.join(root, 'dist');
 const packagePath = path.join(root, 'package.json');
 const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 const appName = packageJson.productName || packageJson.name;
+const prepackagedDir = path.join(outDir, `${appName}-win32-x64`);
 
 const run = (command) => {
   execSync(command, {
@@ -30,7 +31,7 @@ const removeDir = (targetDir) => {
 };
 
 const writeUpdateConfig = () => {
-  const resourcesDir = path.join(outDir, 'ElectronApp-win32-x64', 'resources');
+  const resourcesDir = path.join(prepackagedDir, 'resources');
   const updateConfigPath = path.join(resourcesDir, 'app-update.yml');
   const updateConfig = [
     'provider: github',
@@ -69,6 +70,6 @@ run('electron-forge package --platform=win32 --arch=x64');
 writeUpdateConfig();
 
 console.log('[Build] 使用 electron-builder 生成 NSIS 安装包和更新元数据...');
-run('electron-builder --win --x64 --publish never --prepackaged out/ElectronApp-win32-x64');
+run(`electron-builder --win --x64 --publish never --prepackaged "${prepackagedDir}"`);
 
 console.log('[Build] 构建完成。');

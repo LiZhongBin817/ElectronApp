@@ -1,4 +1,4 @@
-import { BrowserWindow, MenuItemConstructorOptions, Menu, app } from "electron";
+import { BrowserWindow, MenuItemConstructorOptions, Menu } from "electron";
 import localShortcut from 'electron-localshortcut';
 export default class MenuBuilder {
     mainWindow: BrowserWindow;
@@ -22,9 +22,9 @@ export default class MenuBuilder {
             this.setDevContextMenu();
         }
 
-        this.template = this.getMenuTemplate();
+        this.template = [];
         const menu = Menu.buildFromTemplate(this.template);
-        Menu.setApplicationMenu(menu);
+        Menu.setApplicationMenu(null);
 
         return menu;
     }
@@ -60,15 +60,5 @@ export default class MenuBuilder {
                 { label: 'DevTools', role: 'toggleDevTools' },
             ]).popup({ window: this.mainWindow });
         });
-    }
-
-    // 菜单模板
-    getMenuTemplate(): MenuItemConstructorOptions[] {
-        return [
-            {
-                label: app.name,
-                submenu: [{ label: '退出', role: 'quit' }],
-            },
-        ] 
     }
 }

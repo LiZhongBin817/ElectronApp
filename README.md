@@ -1,2 +1,2 @@
-# ElectronApp
-ElectronApp桌面应用程序
+# 本地服务管理器
+本地服务管理器桌面应用程序
