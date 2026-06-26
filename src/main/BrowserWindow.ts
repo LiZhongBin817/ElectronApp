@@ -1,4 +1,4 @@
-import { BrowserWindow } from "electron";
+import { BrowserWindow, screen } from "electron";
 import MenuBuilder from "./menu";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -27,7 +27,15 @@ class MainBrowserWindow extends BrowserWindow {
 }
 
 const createBrowserWindow = () => {
+    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    const windowWidth = Math.min(1280, Math.max(1080, Math.floor(screenWidth * 0.9)));
+    const windowHeight = Math.min(860, Math.max(720, Math.floor(screenHeight * 0.9)));
+
     const mainWindow = new MainBrowserWindow({
+        width: windowWidth,
+        height: windowHeight,
+        minWidth: 1080,
+        minHeight: 720,
         title: '本地服务管理器',
         show: false,
         backgroundColor: '#FFF', // 背景色 

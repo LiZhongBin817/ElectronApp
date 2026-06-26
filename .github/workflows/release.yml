@@ -45,6 +45,30 @@ jobs:
       - name: Build installer
         run: pnpm run dist
 
+      - name: Verify updater assets
+        shell: pwsh
+        run: |
+          $latestPath = "dist/latest.yml"
+          if (!(Test-Path $latestPath)) {
+            throw "dist/latest.yml 不存在，无法发布自动更新元数据。"
+          }
+
+          $pathLine = Get-Content $latestPath | Where-Object { $_ -match "^path:\s*(.+)$" } | Select-Object -First 1
+          if (!$pathLine) {
+            throw "latest.yml 中没有 path 字段。"
+          }
+
+          $assetName = ($pathLine -replace "^path:\s*", "").Trim()
+          $assetPath = Join-Path "dist" $assetName
+          if (!(Test-Path $assetPath)) {
+            throw "latest.yml 指向的安装包不存在：$assetPath"
+          }
+
+          $blockMapPath = "$assetPath.blockmap"
+          if (!(Test-Path $blockMapPath)) {
+            throw "latest.yml 指向的 blockmap 不存在：$blockMapPath"
+          }
+
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:

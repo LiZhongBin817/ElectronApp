@@ -6,6 +6,10 @@ module.exports = {
     asar: true,
     name: '本地服务管理器',
     executableName: '本地服务管理器',
+    win32metadata: {
+      // Windows 打包后的应用本体默认请求管理员权限，便于启动/停止本地服务进程。
+      'requested-execution-level': 'requireAdministrator',
+    },
   },
   rebuildConfig: {},
   plugins: [

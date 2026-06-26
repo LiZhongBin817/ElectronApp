@@ -5,11 +5,12 @@ directories:
   output: dist
 
 win:
+  requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis
       arch:
         - x64
-  artifactName: ${productName}-Setup-${version}.${ext}
+  artifactName: local-service-manager-setup-${version}.${ext}
 
 nsis:
   oneClick: false

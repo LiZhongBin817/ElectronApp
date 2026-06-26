@@ -26,12 +26,19 @@ interface ManagedProcess {
   startedAt: number;
 }
 
+interface KillProcessResult {
+  success: boolean;
+  message?: string;
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "未知错误");
 
 const waitUntil = async (checker: () => Promise<boolean>, timeout: number, interval: number) => {
   const startTime = Date.now();
 
-  // 启动、停止这类操作都不是瞬时完成，通过轮询把“命令已执行”和“服务可用”分开判断。
+  // 启动、停止这类操作都不是瞬时完成，通过轮询区分“命令已执行”和“服务已可用”。
   while (Date.now() - startTime < timeout) {
     if (await checker()) {
       return true;
@@ -82,8 +89,7 @@ const ensureWorkDirExists = async (cwd?: string) => {
       throw new Error("工作目录不是有效文件夹");
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "未知错误";
-    throw new Error(`工作目录不可用：${cwd}，${message}`);
+    throw new Error(`工作目录不可用：${cwd}，${getErrorMessage(error)}`);
   }
 };
 
@@ -107,7 +113,7 @@ const getJavaHomeCandidates = () => [
 const findJavaHome = async () => {
   const candidates = getJavaHomeCandidates().filter(Boolean) as string[];
 
-  // 优先使用用户环境变量；没有配置时扫描常见 JDK 目录，解决双击 Electron 后 JAVA_HOME 丢失的问题。
+  // 优先使用用户环境变量；没有配置时扫描常见 JDK 目录，解决双击打包版后 JAVA_HOME 丢失的问题。
   for (const candidate of candidates) {
     const javaPath = `${candidate}\\bin\\java.exe`;
 
@@ -145,7 +151,7 @@ const findJavaHome = async () => {
 const buildServiceEnv = async (service: LocalServiceConfig) => {
   const javaHome = service.type === "zookeeper" ? await findJavaHome() : process.env.JAVA_HOME;
 
-  // Windows 批处理依赖 SystemRoot/ComSpec；Electron 环境不完整时手动补齐。
+  // Windows 批处理依赖 SystemRoot/ComSpec；Electron 打包环境不完整时手动补齐。
   return {
     ...process.env,
     SystemRoot: process.env.SystemRoot || "C:\\Windows",
@@ -178,17 +184,22 @@ const isProcessAlive = (pid?: number) => {
   }
 };
 
-const killProcessTree = (pid: number) =>
-  process.platform === "win32"
-    ? execAsync(`taskkill /PID ${pid} /T /F`).then(() => undefined)
-    : new Promise<void>((resolve, reject) => {
-        try {
-          process.kill(pid, "SIGTERM");
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      });
+const killProcessTree = async (pid: number): Promise<KillProcessResult> => {
+  try {
+    if (process.platform === "win32") {
+      await execAsync(`taskkill /PID ${pid} /T /F`);
+      return { success: true };
+    }
+
+    process.kill(pid, "SIGTERM");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      message: getErrorMessage(error),
+    };
+  }
+};
 
 export class LocalServiceManager {
   private readonly store = new ServiceConfigStore();
@@ -258,7 +269,7 @@ export class LocalServiceManager {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : "工作目录不可用",
+        message: getErrorMessage(error),
       };
     }
 
@@ -363,10 +374,18 @@ export class LocalServiceManager {
 
       // 停止命令执行后端口仍监听时，按端口 PID 兜底结束进程树。
       if (status.running && status.pid && status.pid !== process.pid) {
-        await killProcessTree(status.pid);
+        const killResult = await killProcessTree(status.pid);
         this.managedProcesses.delete(service.id);
         await waitUntil(async () => !(await this.getStatus(service)).running, 5000, 500);
         status = await this.getStatus(service);
+
+        if (status.running && !killResult.success) {
+          return {
+            success: true,
+            message: "停止命令已执行，但端口仍在监听，请以管理员权限运行或手动检查进程",
+            status,
+          };
+        }
       }
 
       return {
@@ -380,14 +399,16 @@ export class LocalServiceManager {
 
     // 没有停止命令时，只结束可确认的托管进程或端口监听进程，避免误杀无关进程。
     if (targetPid && isProcessAlive(targetPid)) {
-      await killProcessTree(targetPid);
+      const killResult = await killProcessTree(targetPid);
       this.managedProcesses.delete(service.id);
       await waitUntil(async () => !(await this.getStatus(service)).running, 5000, 500);
       const status = await this.getStatus(service);
 
       return {
         success: !status.running,
-        message: status.running ? "已结束托管进程，但端口仍被占用" : "服务已停止",
+        message: status.running
+          ? `已尝试结束进程，但端口仍被占用：${killResult.message || "请检查进程权限"}`
+          : "服务已停止",
         status,
       };
     }
@@ -404,7 +425,17 @@ export class LocalServiceManager {
   }
 
   async restartService(serviceId: string): Promise<ServiceOperationResult> {
-    await this.stopService(serviceId);
+    const stopResult = await this.stopService(serviceId);
+
+    if (!stopResult.success || stopResult.status?.running) {
+      return {
+        ...stopResult,
+        message: stopResult.status?.running
+          ? `${stopResult.message}，已取消重启`
+          : stopResult.message,
+      };
+    }
+
     return this.startService(serviceId);
   }
 

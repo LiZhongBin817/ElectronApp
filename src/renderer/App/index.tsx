@@ -126,7 +126,11 @@ const App: Component = () => {
 
   const isBusy = createMemo(() => Boolean(loadingText()));
   const isEditing = createMemo(() => Boolean(form().id));
+  const noticeText = createMemo(() => loadingText() || message());
   const isEditLockMessage = createMemo(() => message() === "请先取消编辑或保存配置后再切换服务");
+  const isWarningNotice = createMemo(() =>
+    isEditLockMessage() || /失败|错误|异常|无法|权限|仍在监听|取消重启/.test(noticeText()),
+  );
 
   const resetRegistryView = () => {
     // 选中服务变化后清空旧注册信息，避免把上一个服务的节点误认为当前服务数据。
@@ -444,11 +448,15 @@ const App: Component = () => {
       <NotificationsProvider>
         <main
           style={{
+            display: "grid",
+            "grid-template-rows": "auto minmax(0, 1fr)",
+            gap: "16px",
+            width: "100vw",
+            height: "100vh",
             padding: "16px",
             color: "#0f172a",
             "background-color": "#f8fafc",
-            "min-width": "860px",
-            overflow: "auto",
+            overflow: "hidden",
           }}
         >
           <header
@@ -458,9 +466,9 @@ const App: Component = () => {
               "justify-content": "space-between",
               "flex-wrap": "wrap",
               gap: "12px",
-              "margin-bottom": "16px",
               "border-bottom": "1px solid #e2e8f0",
               "padding-bottom": "12px",
+              "min-width": 0,
             }}
           >
             <h1 style={{ margin: 0, "font-size": "20px", "font-weight": 700 }}>
@@ -487,13 +495,18 @@ const App: Component = () => {
           <section
             style={{
               display: "grid",
-              "grid-template-columns": "minmax(320px, 460px) minmax(520px, 1fr)",
+              "grid-template-columns": "minmax(300px, 420px) minmax(0, 1fr)",
               gap: "16px",
               "align-items": "start",
+              "min-height": 0,
+              "min-width": 0,
+              overflow: "hidden",
             }}
           >
             <aside
               style={{
+                height: "100%",
+                overflow: "hidden",
                 padding: "14px",
                 border: "1px solid #e2e8f0",
                 "border-radius": "8px",
@@ -724,7 +737,7 @@ const App: Component = () => {
               </div>
             </aside>
 
-            <section style={{ display: "grid", gap: "16px" }}>
+            <section style={{ display: "grid", gap: "16px", "min-width": 0, "min-height": 0, overflow: "hidden" }}>
               <div
                 style={{
                   padding: "14px",
@@ -743,26 +756,32 @@ const App: Component = () => {
                   }}
                 >
                   <h2 style={{ margin: 0, "font-size": "16px" }}>服务列表</h2>
-                  <span
-                    title={loadingText() || message()}
+                </div>
+
+                <Show when={noticeText()}>
+                  <div
+                    role={isWarningNotice() ? "alert" : "status"}
+                    title={noticeText()}
                     style={{
-                      color: isEditLockMessage() ? "#9a3412" : "#64748b",
-                      background: isEditLockMessage() ? "#ffedd5" : "transparent",
-                      border: isEditLockMessage() ? "1px solid #fdba74" : "1px solid transparent",
+                      color: isWarningNotice() ? "#9a3412" : "#475569",
+                      background: isWarningNotice() ? "#ffedd5" : "#f8fafc",
+                      border: isWarningNotice() ? "1px solid #fdba74" : "1px solid #e2e8f0",
                       "border-radius": "6px",
-                      padding: isEditLockMessage() ? "6px 10px" : "0",
+                      padding: "8px 10px",
+                      "margin-bottom": "12px",
                       "font-size": "13px",
-                      "font-weight": isEditLockMessage() ? 700 : 400,
-                      "max-width": "min(680px, 70%)",
-                      overflow: "hidden",
-                      "text-overflow": "ellipsis",
-                      "white-space": "nowrap",
-                      "text-align": "right",
+                      "font-weight": isWarningNotice() ? 700 : 500,
+                      "line-height": 1.5,
+                      "max-height": "112px",
+                      overflow: "auto",
+                      "overflow-wrap": "anywhere",
+                      "white-space": "pre-wrap",
+                      "user-select": "text",
                     }}
                   >
-                    {loadingText() || message()}
-                  </span>
-                </div>
+                    {noticeText()}
+                  </div>
+                </Show>
 
                 <Show
                   when={services().length > 0}
