@@ -9,6 +9,7 @@ const versions = {
 const appApi = {
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  getUpdaterStatus: () => ipcRenderer.invoke('updater:get-status'),
   listLocalServices: () => ipcRenderer.invoke('local-service:list'),
   saveLocalService: (service) => ipcRenderer.invoke('local-service:save', service),
   removeLocalService: (serviceId) => ipcRenderer.invoke('local-service:remove', serviceId),

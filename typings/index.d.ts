@@ -6,6 +6,7 @@ declare const Env_Test: boolean;
 interface AppBridgeApi {
   invoke<TResponse>(channel: string, ...args: readonly unknown[]): Promise<TResponse>;
   getAppVersion(): Promise<string>;
+  getUpdaterStatus(): Promise<UpdaterStatus | null>;
   listLocalServices(): Promise<IpcResponse<LocalServiceConfig[]>>;
   saveLocalService(service: LocalServiceConfig): Promise<IpcResponse<LocalServiceConfig>>;
   removeLocalService(serviceId: string): Promise<IpcResponse<void>>;

@@ -122,6 +122,7 @@ const App: Component = () => {
 
   let removeUpdaterStatusListener: (() => void) | undefined;
   let refreshTimer: number | undefined;
+  let updaterStatusTimer: number | undefined;
 
   const selectedService = createMemo(() =>
     services().find((service) => service.id === selectedServiceId()),
@@ -199,6 +200,19 @@ const App: Component = () => {
     ].filter(Boolean);
 
     return details.join(" · ");
+  };
+
+  const syncUpdaterStatus = async () => {
+    try {
+      const status = await window.$api.getUpdaterStatus();
+
+      // updater 事件可能早于页面监听注册，主动拉取最后状态作为兜底。
+      if (status) {
+        setUpdaterStatus(status);
+      }
+    } catch (error) {
+      console.error("同步更新状态失败", error);
+    }
   };
 
   const refreshStatuses = async () => {
@@ -461,6 +475,12 @@ const App: Component = () => {
     removeUpdaterStatusListener = window.$api.onUpdaterStatus((status) => {
       setUpdaterStatus(status);
     });
+    await syncUpdaterStatus();
+    updaterStatusTimer = window.setInterval(() => {
+      syncUpdaterStatus().catch((error) => {
+        console.error("定时同步更新状态失败", error);
+      });
+    }, 1000);
 
     try {
       const version = await window.$api.getAppVersion();
@@ -480,6 +500,10 @@ const App: Component = () => {
 
   onCleanup(() => {
     removeUpdaterStatusListener?.();
+    if (updaterStatusTimer) {
+      window.clearInterval(updaterStatusTimer);
+    }
+
     if (refreshTimer) {
       window.clearInterval(refreshTimer);
     }

@@ -1,10 +1,13 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 
 const UPDATER_STATUS_CHANNEL = 'updater:status';
+const UPDATER_GET_STATUS_CHANNEL = 'updater:get-status';
 let updaterStarted = false;
+let updaterIpcRegistered = false;
 let downloadingVersion = '';
+let latestUpdaterStatus = null;
 
 const normalizeProgressPercent = (percent) => {
   if (!Number.isFinite(percent)) {
@@ -31,6 +34,7 @@ const sendUpdaterStatus = (status) => {
     timestamp: Date.now(),
     ...status,
   };
+  latestUpdaterStatus = updaterStatus;
 
   BrowserWindow.getAllWindows().forEach((browserWindow) => {
     if (browserWindow.isDestroyed()) {
@@ -41,7 +45,17 @@ const sendUpdaterStatus = (status) => {
   });
 };
 
+const registerUpdaterIpc = () => {
+  if (updaterIpcRegistered) {
+    return;
+  }
+
+  updaterIpcRegistered = true;
+  ipcMain.handle(UPDATER_GET_STATUS_CHANNEL, () => latestUpdaterStatus);
+};
+
 function setupAutoUpdater(options = {}) {
+  registerUpdaterIpc();
   autoUpdater.logger = log;
   log.transports.file.level = 'info';
   log.transports.console.level = false;
@@ -195,4 +209,4 @@ function setupAutoUpdater(options = {}) {
   });
 }
 
-module.exports = { setupAutoUpdater };
+module.exports = { registerUpdaterIpc, setupAutoUpdater };

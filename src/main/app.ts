@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import createBrowserWindow from "./BrowserWindow";
-import { setupAutoUpdater } from "../../webpack/autoUpdater";
+import { registerUpdaterIpc, setupAutoUpdater } from "../../webpack/autoUpdater";
 import { registerServiceIpc } from "./ipc/serviceIpc";
 
 const APP_DISPLAY_NAME = "本地服务管理器";
@@ -20,6 +20,7 @@ export class App {
   /** 注册主进程接口 */
   registerIpc() {
     ipcMain.handle("app:get-version", () => app.getVersion());
+    registerUpdaterIpc();
     registerServiceIpc();
   }
 
