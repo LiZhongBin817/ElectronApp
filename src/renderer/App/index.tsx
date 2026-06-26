@@ -83,6 +83,30 @@ const getStatusText = (status?: LocalServiceStatus) => {
   return status.healthy ? "运行中" : "健康异常";
 };
 
+const formatBytes = (bytes?: number) => {
+  if (!Number.isFinite(bytes) || !bytes || bytes <= 0) {
+    return "";
+  }
+
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let unitIndex = 0;
+
+  // 下载进度里的字节数来自 updater，按 1024 进位展示成更容易读的大小。
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value.toFixed(unitIndex === 0 ? 0 : 1)}${units[unitIndex]}`;
+};
+
+const formatDownloadSpeed = (bytesPerSecond?: number) => {
+  const formattedSize = formatBytes(bytesPerSecond);
+
+  return formattedSize ? `${formattedSize}/s` : "";
+};
+
 const App: Component = () => {
   const [appVersion, setAppVersion] = createSignal("加载中");
   const [updaterStatus, setUpdaterStatus] = createSignal<UpdaterStatus | null>(null);
@@ -157,6 +181,24 @@ const App: Component = () => {
     }
 
     return status.message;
+  };
+
+  const getUpdaterProgressDetail = () => {
+    const status = updaterStatus();
+
+    if (!status || status.status !== "downloading") {
+      return "";
+    }
+
+    const transferred = formatBytes(status.transferred);
+    const total = formatBytes(status.total);
+    const speed = formatDownloadSpeed(status.bytesPerSecond);
+    const details = [
+      transferred && total ? `${transferred} / ${total}` : "",
+      speed,
+    ].filter(Boolean);
+
+    return details.join(" · ");
   };
 
   const refreshStatuses = async () => {
@@ -483,11 +525,34 @@ const App: Component = () => {
                 color: updaterStatus()?.status === "error" ? "#dc2626" : "#475569",
                 "font-size": "13px",
                 "line-height": 1.5,
+                "min-width": "260px",
+                "max-width": "420px",
               }}
             >
               <span>当前版本：{appVersion()}</span>
               <Show when={updaterStatus()}>
-                <span>{getUpdaterStatusText()}</span>
+                <div style={updaterPanelStyle}>
+                  <span>{getUpdaterStatusText()}</span>
+                  <Show when={getUpdaterProgressDetail()}>
+                    {(detail) => <span style={updaterDetailStyle}>{detail()}</span>}
+                  </Show>
+                  <Show when={updaterStatus()?.status === "downloading"}>
+                    <div
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow={Math.round(getProgressPercent())}
+                      style={updaterProgressTrackStyle}
+                    >
+                      <div
+                        style={{
+                          ...updaterProgressBarStyle,
+                          width: `${getProgressPercent()}%`,
+                        }}
+                      />
+                    </div>
+                  </Show>
+                </div>
               </Show>
             </div>
           </header>
@@ -1077,6 +1142,35 @@ const dangerButtonStyle: JSX.CSSProperties = {
   ...buttonStyle,
   border: "1px solid #fecaca",
   color: "#b91c1c",
+};
+
+const updaterPanelStyle: JSX.CSSProperties = {
+  display: "grid",
+  gap: "4px",
+  width: "100%",
+  "text-align": "right",
+  "word-break": "break-word",
+};
+
+const updaterDetailStyle: JSX.CSSProperties = {
+  color: "#64748b",
+  "font-size": "12px",
+};
+
+const updaterProgressTrackStyle: JSX.CSSProperties = {
+  width: "100%",
+  height: "6px",
+  overflow: "hidden",
+  border: "1px solid #bfdbfe",
+  "border-radius": "999px",
+  background: "#eff6ff",
+};
+
+const updaterProgressBarStyle: JSX.CSSProperties = {
+  height: "100%",
+  "border-radius": "999px",
+  background: "#2563eb",
+  transition: "width 180ms ease",
 };
 
 const registryListStyle: JSX.CSSProperties = {

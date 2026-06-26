@@ -4,6 +4,7 @@ const { autoUpdater } = require('electron-updater');
 
 const UPDATER_STATUS_CHANNEL = 'updater:status';
 let updaterStarted = false;
+let downloadingVersion = '';
 
 const normalizeProgressPercent = (percent) => {
   if (!Number.isFinite(percent)) {
@@ -117,18 +118,24 @@ function setupAutoUpdater(options = {}) {
     });
 
     if (result.response === 0) {
+      downloadingVersion = info.version;
       sendUpdaterStatus({
         status: 'downloading',
         version: info.version,
         percent: 0,
+        bytesPerSecond: 0,
+        transferred: 0,
+        total: 0,
         message: `正在下载更新：${info.version}`,
       });
 
       autoUpdater.downloadUpdate().catch((error) => {
         log.error('[Updater] 下载更新失败：', error);
+        downloadingVersion = '';
         sendUpdaterStatus({
           status: 'error',
           version: info.version,
+          percent: 0,
           message: `下载更新失败：${getErrorMessage(error)}`,
         });
       });
@@ -148,6 +155,7 @@ function setupAutoUpdater(options = {}) {
     log.info(`[Updater] 下载进度：${percent.toFixed(2)}%`);
     sendUpdaterStatus({
       status: 'downloading',
+      version: downloadingVersion,
       percent,
       bytesPerSecond: progress.bytesPerSecond,
       transferred: progress.transferred,
@@ -157,6 +165,7 @@ function setupAutoUpdater(options = {}) {
   });
 
   autoUpdater.on('update-downloaded', async (info) => {
+    downloadingVersion = '';
     sendUpdaterStatus({
       status: 'downloaded',
       version: info.version,
